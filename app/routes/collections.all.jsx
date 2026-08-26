@@ -1,13 +1,13 @@
-import {useLoaderData} from 'react-router';
-import {getPaginationVariables} from '@shopify/hydrogen';
-import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
-import {ProductItem} from '~/components/ProductItem';
+import { useLoaderData } from 'react-router';
+import { getPaginationVariables } from '@shopify/hydrogen';
+import { PaginatedResourceSection } from '~/components/PaginatedResourceSection';
+import { ProductItem } from '~/components/ProductItem';
 
 /**
  * @type {Route.MetaFunction}
  */
 export const meta = () => {
-  return [{title: `Hydrogen | Products`}];
+  return [{ title: `Hydrogen | Products` }];
 };
 
 /**
@@ -20,7 +20,7 @@ export async function loader(args) {
   // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
 
-  return {...deferredData, ...criticalData};
+  return { ...deferredData, ...criticalData };
 }
 
 /**
@@ -28,19 +28,19 @@ export async function loader(args) {
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  * @param {Route.LoaderArgs}
  */
-async function loadCriticalData({context, request}) {
-  const {storefront} = context;
+async function loadCriticalData({ context, request }) {
+  const { storefront } = context;
   const paginationVariables = getPaginationVariables(request, {
     pageBy: 8,
   });
 
-  const [{products}] = await Promise.all([
+  const [{ products }] = await Promise.all([
     storefront.query(CATALOG_QUERY, {
-      variables: {...paginationVariables},
+      variables: { ...paginationVariables },
     }),
     // Add other queries here, so that they are loaded in parallel
   ]);
-  return {products};
+  return { products };
 }
 
 /**
@@ -49,13 +49,13 @@ async function loadCriticalData({context, request}) {
  * Make sure to not throw any errors here, as it will cause the page to 500.
  * @param {Route.LoaderArgs}
  */
-function loadDeferredData({context}) {
+function loadDeferredData({ context }) {
   return {};
 }
 
 export default function Collection() {
   /** @type {LoaderReturnData} */
-  const {products} = useLoaderData();
+  const { products } = useLoaderData();
 
   return (
     <div className="collection">
@@ -64,7 +64,7 @@ export default function Collection() {
         connection={products}
         resourcesClassName="products-grid"
       >
-        {({node: product, index}) => (
+        {({ node: product, index }) => (
           <ProductItem
             key={product.id}
             product={product}
@@ -131,3 +131,84 @@ const CATALOG_QUERY = `#graphql
 /** @typedef {import('./+types/collections.all').Route} Route */
 /** @typedef {import('storefrontapi.generated').CollectionItemFragment} CollectionItemFragment */
 /** @typedef {ReturnType<typeof useLoaderData<typeof loader>>} LoaderReturnData */
+<div style={{ textAlign: 'center', padding: '4rem 1rem', background: '#fff', borderRadius: '8px' }}>
+  <h3>No products found in catalog.</h3>
+  <Link to="/" className="btn-primary" style={{ marginTop: '1rem', display: 'inline-block' }}>
+    Go to Homepage
+  </Link>
+</div>
+        )}
+      </div >
+    </div >
+  );
+}
+
+const ALL_PRODUCTS_QUERY = `#graphql
+  query AllProducts($first: Int = 100) {
+    products(first: $first) {
+      nodes {
+        id
+        title
+        handle
+        vendor
+        productType
+        description
+        priceRange {
+          minVariantPrice {
+            amount
+            currencyCode
+          }
+          maxVariantPrice {
+            amount
+            currencyCode
+          }
+        }
+        featuredImage {
+          id
+          url
+          altText
+        }
+        images(first: 5) {
+          nodes {
+            id
+            url
+            altText
+          }
+        }
+        options {
+          name
+          values
+        }
+        variants(first: 10) {
+          nodes {
+            id
+            title
+            availableForSale
+            price {
+              amount
+              currencyCode
+            }
+            compareAtPrice {
+              amount
+              currencyCode
+            }
+            selectedOptions {
+              name
+              value
+            }
+            image {
+              url
+            }
+          }
+        }
+      }
+    }
+    collections(first: 20) {
+      nodes {
+        id
+        title
+        handle
+      }
+    }
+  }
+`;

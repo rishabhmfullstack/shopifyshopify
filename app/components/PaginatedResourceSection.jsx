@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Pagination} from '@shopify/hydrogen';
+import { Pagination } from '@shopify/hydrogen';
 
 /**
  * <PaginatedResourceSection> encapsulates the previous and next pagination behaviors throughout your application.
@@ -13,9 +13,9 @@ export function PaginatedResourceSection({
 }) {
   return (
     <Pagination connection={connection}>
-      {({nodes, isLoading, PreviousLink, NextLink}) => {
+      {({ nodes, isLoading, PreviousLink, NextLink }) => {
         const resourcesMarkup = nodes.map((node, index) =>
-          children({node, index}),
+          children({ node, index }),
         );
 
         return (

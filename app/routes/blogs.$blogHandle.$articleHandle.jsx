@@ -1,12 +1,12 @@
-import {useLoaderData} from 'react-router';
-import {Image} from '@shopify/hydrogen';
-import {redirectIfHandleIsLocalized} from '~/lib/redirect';
+import { useLoaderData } from 'react-router';
+import { Image } from '@shopify/hydrogen';
+import { redirectIfHandleIsLocalized } from '~/lib/redirect';
 
 /**
  * @type {Route.MetaFunction}
  */
-export const meta = ({data}) => {
-  return [{title: `Hydrogen | ${data?.article.title ?? ''} article`}];
+export const meta = ({ data }) => {
+  return [{ title: `Hydrogen | ${data?.article.title ?? ''} article` }];
 };
 
 /**
@@ -19,7 +19,7 @@ export async function loader(args) {
   // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
 
-  return {...deferredData, ...criticalData};
+  return { ...deferredData, ...criticalData };
 }
 
 /**
@@ -27,22 +27,22 @@ export async function loader(args) {
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  * @param {Route.LoaderArgs}
  */
-async function loadCriticalData({context, request, params}) {
-  const {blogHandle, articleHandle} = params;
+async function loadCriticalData({ context, request, params }) {
+  const { blogHandle, articleHandle } = params;
 
   if (!articleHandle || !blogHandle) {
-    throw new Response('Not found', {status: 404});
+    throw new Response('Not found', { status: 404 });
   }
 
-  const [{blog}] = await Promise.all([
+  const [{ blog }] = await Promise.all([
     context.storefront.query(ARTICLE_QUERY, {
-      variables: {blogHandle, articleHandle},
+      variables: { blogHandle, articleHandle },
     }),
     // Add other queries here, so that they are loaded in parallel
   ]);
 
   if (!blog?.articleByHandle) {
-    throw new Response(null, {status: 404});
+    throw new Response(null, { status: 404 });
   }
 
   redirectIfHandleIsLocalized(
@@ -59,7 +59,7 @@ async function loadCriticalData({context, request, params}) {
 
   const article = blog.articleByHandle;
 
-  return {article};
+  return { article };
 }
 
 /**
@@ -68,14 +68,14 @@ async function loadCriticalData({context, request, params}) {
  * Make sure to not throw any errors here, as it will cause the page to 500.
  * @param {Route.LoaderArgs}
  */
-function loadDeferredData({context}) {
+function loadDeferredData({ context }) {
   return {};
 }
 
 export default function Article() {
   /** @type {LoaderReturnData} */
-  const {article} = useLoaderData();
-  const {title, image, contentHtml, author} = article;
+  const { article } = useLoaderData();
+  const { title, image, contentHtml, author } = article;
 
   const publishedDate = new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
@@ -95,7 +95,7 @@ export default function Article() {
 
       {image && <Image data={image} sizes="90vw" loading="eager" />}
       <div
-        dangerouslySetInnerHTML={{__html: contentHtml}}
+        dangerouslySetInnerHTML={{ __html: contentHtml }}
         className="article"
       />
     </div>

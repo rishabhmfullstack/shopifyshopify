@@ -1,180 +1,99 @@
-import {Await, Link} from 'react-router';
-import {Suspense, useId} from 'react';
-import {Aside} from '~/components/Aside';
-import {Footer} from '~/components/Footer';
-import {Header, HeaderMenu} from '~/components/Header';
-import {CartMain} from '~/components/CartMain';
-import {
-  SEARCH_ENDPOINT,
-  SearchFormPredictive,
-} from '~/components/SearchFormPredictive';
-import {SearchResultsPredictive} from '~/components/SearchResultsPredictive';
+import { useState, createContext, useContext } from 'react';
+import { Header } from '~/components/Header';
+import { Footer } from '~/components/Footer';
+import { CartDrawer } from '~/components/CartDrawer';
+import { SwatchRequestModal } from '~/components/SwatchRequestModal';
+import { OxygenInspector } from '~/components/OxygenInspector';
+import { POLY_BARK_PRODUCTS } from '~/lib/poly-bark-catalog';
 
-/**
- * @param {PageLayoutProps}
- */
-export function PageLayout({
-  cart,
-  children = null,
-  footer,
-  header,
-  isLoggedIn,
-  publicStoreDomain,
-}) {
+export const StorefrontContext = createContext();
+
+export function useStorefront() {
+  return useContext(StorefrontContext);
+}
+
+export function PageLayout({ children }) {
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isSwatchModalOpen, setIsSwatchModalOpen] = useState(false);
+
+  // Default initial cart items with Napa Cognac Leather Sofa
+  const [cartItems, setCartItems] = useState([
+    {
+      id: 'cart-line-1',
+      title: POLY_BARK_PRODUCTS[0].title,
+      variantTitle: 'Cognac Tan / 88" 3-Seater',
+      price: POLY_BARK_PRODUCTS[0].priceRange.minVariantPrice.amount,
+      image: POLY_BARK_PRODUCTS[0].featuredImage.url,
+      quantity: 1,
+    },
+  ]);
+
+  const addToCart = (product, variant) => {
+    const variantId = variant?.id || product.variants?.nodes?.[0]?.id || product.id;
+    const existingIndex = cartItems.findIndex((item) => item.id === variantId);
+
+    if (existingIndex > -1) {
+      const updated = [...cartItems];
+      updated[existingIndex].quantity += 1;
+      setCartItems(updated);
+    } else {
+      setCartItems([
+        ...cartItems,
+        {
+          id: variantId,
+          title: product.title,
+          variantTitle: variant?.title || 'Cognac Tan',
+          price: variant?.price?.amount || product.priceRange?.minVariantPrice?.amount,
+          image: variant?.image?.url || product.featuredImage?.url,
+          quantity: 1,
+        },
+      ]);
+    }
+    setIsCartOpen(true);
+  };
+
+  const updateQuantity = (id, newQty) => {
+    setCartItems(cartItems.map((item) => (item.id === id ? { ...item, quantity: newQty } : item)));
+  };
+
+  const removeItem = (id) => {
+    setCartItems(cartItems.filter((item) => item.id !== id));
+  };
+
   return (
-    <Aside.Provider>
-      <CartAside cart={cart} />
-      <SearchAside />
-      <MobileMenuAside header={header} publicStoreDomain={publicStoreDomain} />
-      {header && (
+    <StorefrontContext.Provider
+      value={{
+        addToCart,
+        openCart: () => setIsCartOpen(true),
+        openSwatchModal: () => setIsSwatchModalOpen(true),
+      }}
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <Header
-          header={header}
-          cart={cart}
-          isLoggedIn={isLoggedIn}
-          publicStoreDomain={publicStoreDomain}
+          cart={{ lines: { nodes: cartItems }, totalQuantity: cartItems.reduce((a, b) => a + b.quantity, 0) }}
+          onOpenCart={() => setIsCartOpen(true)}
+          onOpenSwatchModal={() => setIsSwatchModalOpen(true)}
         />
-      )}
-      <main>{children}</main>
-      <Footer
-        footer={footer}
-        header={header}
-        publicStoreDomain={publicStoreDomain}
-      />
-    </Aside.Provider>
-  );
-}
 
-/**
- * @param {{cart: PageLayoutProps['cart']}}
- */
-function CartAside({cart}) {
-  return (
-    <Aside type="cart" heading="CART">
-      <Suspense fallback={<p>Loading cart ...</p>}>
-        <Await resolve={cart}>
-          {(cart) => {
-            return <CartMain cart={cart} layout="aside" />;
-          }}
-        </Await>
-      </Suspense>
-    </Aside>
-  );
-}
+        <main style={{ flexGrow: 1 }}>{children}</main>
 
-function SearchAside() {
-  const queriesDatalistId = useId();
-  return (
-    <Aside type="search" heading="SEARCH">
-      <div className="predictive-search">
-        <br />
-        <SearchFormPredictive>
-          {({fetchResults, goToSearch, inputRef}) => (
-            <>
-              <input
-                name="q"
-                onChange={fetchResults}
-                onFocus={fetchResults}
-                placeholder="Search"
-                ref={inputRef}
-                type="search"
-                list={queriesDatalistId}
-              />
-              &nbsp;
-              <button onClick={goToSearch}>Search</button>
-            </>
-          )}
-        </SearchFormPredictive>
+        <Footer />
 
-        <SearchResultsPredictive>
-          {({items, total, term, state, closeSearch}) => {
-            const {articles, collections, pages, products, queries} = items;
+        <CartDrawer
+          isOpen={isCartOpen}
+          onClose={() => setIsCartOpen(false)}
+          cartItems={cartItems}
+          onUpdateQuantity={updateQuantity}
+          onRemoveItem={removeItem}
+        />
 
-            if (state === 'loading' && term.current) {
-              return <div>Loading...</div>;
-            }
+        <SwatchRequestModal
+          isOpen={isSwatchModalOpen}
+          onClose={() => setIsSwatchModalOpen(false)}
+        />
 
-            if (!total) {
-              return <SearchResultsPredictive.Empty term={term} />;
-            }
-
-            return (
-              <>
-                <SearchResultsPredictive.Queries
-                  queries={queries}
-                  queriesDatalistId={queriesDatalistId}
-                />
-                <SearchResultsPredictive.Products
-                  products={products}
-                  closeSearch={closeSearch}
-                  term={term}
-                />
-                <SearchResultsPredictive.Collections
-                  collections={collections}
-                  closeSearch={closeSearch}
-                  term={term}
-                />
-                <SearchResultsPredictive.Pages
-                  pages={pages}
-                  closeSearch={closeSearch}
-                  term={term}
-                />
-                <SearchResultsPredictive.Articles
-                  articles={articles}
-                  closeSearch={closeSearch}
-                  term={term}
-                />
-                {term.current && total ? (
-                  <Link
-                    onClick={closeSearch}
-                    to={`${SEARCH_ENDPOINT}?q=${term.current}`}
-                  >
-                    <p>
-                      View all results for <q>{term.current}</q>
-                      &nbsp; →
-                    </p>
-                  </Link>
-                ) : null}
-              </>
-            );
-          }}
-        </SearchResultsPredictive>
+        <OxygenInspector />
       </div>
-    </Aside>
+    </StorefrontContext.Provider>
   );
 }
-
-/**
- * @param {{
- *   header: PageLayoutProps['header'];
- *   publicStoreDomain: PageLayoutProps['publicStoreDomain'];
- * }}
- */
-function MobileMenuAside({header, publicStoreDomain}) {
-  return (
-    header.menu &&
-    header.shop.primaryDomain?.url && (
-      <Aside type="mobile" heading="MENU">
-        <HeaderMenu
-          menu={header.menu}
-          viewport="mobile"
-          primaryDomainUrl={header.shop.primaryDomain.url}
-          publicStoreDomain={publicStoreDomain}
-        />
-      </Aside>
-    )
-  );
-}
-
-/**
- * @typedef {Object} PageLayoutProps
- * @property {Promise<CartApiQueryFragment|null>} cart
- * @property {Promise<FooterQuery|null>} footer
- * @property {HeaderQuery} header
- * @property {Promise<boolean>} isLoggedIn
- * @property {string} publicStoreDomain
- * @property {React.ReactNode} [children]
- */
-
-/** @typedef {import('storefrontapi.generated').CartApiQueryFragment} CartApiQueryFragment */
-/** @typedef {import('storefrontapi.generated').FooterQuery} FooterQuery */
-/** @typedef {import('storefrontapi.generated').HeaderQuery} HeaderQuery */

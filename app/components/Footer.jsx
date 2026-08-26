@@ -1,130 +1,51 @@
-import {Suspense} from 'react';
-import {Await, NavLink} from 'react-router';
+import { Link } from 'react-router';
 
-/**
- * @param {FooterProps}
- */
-export function Footer({footer: footerPromise, header, publicStoreDomain}) {
+export function Footer() {
   return (
-    <Suspense>
-      <Await resolve={footerPromise}>
-        {(footer) => (
-          <footer className="footer">
-            {footer?.menu && header.shop.primaryDomain?.url && (
-              <FooterMenu
-                menu={footer.menu}
-                primaryDomainUrl={header.shop.primaryDomain.url}
-                publicStoreDomain={publicStoreDomain}
-              />
-            )}
-          </footer>
-        )}
-      </Await>
-    </Suspense>
+    <footer className="footer" style={{ background: 'var(--color-dark)', color: '#fff', padding: '4rem 2rem 2rem' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '3rem' }}>
+        <div>
+          <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.4rem', color: 'var(--color-cognac)', marginBottom: '1rem' }}>POLY & BARK</h3>
+          <p style={{ fontSize: '0.85rem', color: '#aaa', lineHeight: 1.6 }}>
+            Headless Shopify storefront built with Hydrogen & Remix Oxygen edge runtime. Delivering Italian full-grain leather furniture straight to modern homes.
+          </p>
+        </div>
+
+        <div>
+          <h4 style={{ fontSize: '0.9rem', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '1rem' }}>Shop Collections</h4>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+            <li><Link to="/collections/living-room" style={{ color: '#ccc', textDecoration: 'none' }}>Living Room Sofas</Link></li>
+            <li><Link to="/collections/cognac-leather" style={{ color: '#ccc', textDecoration: 'none' }}>Italian Cognac Leather</Link></li>
+            <li><Link to="/collections/dining" style={{ color: '#ccc', textDecoration: 'none' }}>Solid Walnut Dining</Link></li>
+            <li><Link to="/products/napa-cognac-leather-sofa" style={{ color: '#ccc', textDecoration: 'none' }}>Napa Leather Sofa</Link></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 style={{ fontSize: '0.9rem', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '1rem' }}>The Poly Guarantee</h4>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.85rem', color: '#ccc', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+            <li>✓ 100-Day In-Home Trial</li>
+            <li>✓ 10-Year Structural Frame Warranty</li>
+            <li>✓ Free White-Glove Shipping over $999</li>
+            <li>✓ Direct Italian Leather Tannery Sourcing</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 style={{ fontSize: '0.9rem', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '1rem' }}>Hydrogen Architecture</h4>
+          <p style={{ fontSize: '0.8rem', color: '#888' }}>
+            Powered by Shopify Storefront API GraphQL & Oxygen Workers Edge Runtime.
+          </p>
+          <div style={{ display: 'inline-block', background: 'rgba(255,255,255,0.1)', padding: '0.4rem 0.8rem', borderRadius: '4px', fontSize: '0.75rem', fontFamily: 'monospace', color: '#10B981', marginTop: '0.5rem' }}>
+            ● Edge Node: IAD-OXYGEN-V2
+          </div>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: '1200px', margin: '3rem auto 0', borderTop: '1px solid #333', paddingTop: '1.5rem', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', fontSize: '0.75rem', color: '#777' }}>
+        <span>© {new Date().getFullYear()} Poly & Bark. Headless Hydrogen Storefront.</span>
+        <span>Storefront API 2026-04 • Hydrogen Remix Edge</span>
+      </div>
+    </footer>
   );
 }
-
-/**
- * @param {{
- *   menu: FooterQuery['menu'];
- *   primaryDomainUrl: FooterProps['header']['shop']['primaryDomain']['url'];
- *   publicStoreDomain: string;
- * }}
- */
-function FooterMenu({menu, primaryDomainUrl, publicStoreDomain}) {
-  return (
-    <nav className="footer-menu" role="navigation">
-      {(menu || FALLBACK_FOOTER_MENU).items.map((item) => {
-        if (!item.url) return null;
-        // if the url is internal, we strip the domain
-        const url =
-          item.url.includes('myshopify.com') ||
-          item.url.includes(publicStoreDomain) ||
-          item.url.includes(primaryDomainUrl)
-            ? new URL(item.url).pathname
-            : item.url;
-        const isExternal = !url.startsWith('/');
-        return isExternal ? (
-          <a href={url} key={item.id} rel="noopener noreferrer" target="_blank">
-            {item.title}
-          </a>
-        ) : (
-          <NavLink
-            end
-            key={item.id}
-            prefetch="intent"
-            style={activeLinkStyle}
-            to={url}
-          >
-            {item.title}
-          </NavLink>
-        );
-      })}
-    </nav>
-  );
-}
-
-const FALLBACK_FOOTER_MENU = {
-  id: 'gid://shopify/Menu/199655620664',
-  items: [
-    {
-      id: 'gid://shopify/MenuItem/461633060920',
-      resourceId: 'gid://shopify/ShopPolicy/23358046264',
-      tags: [],
-      title: 'Privacy Policy',
-      type: 'SHOP_POLICY',
-      url: '/policies/privacy-policy',
-      items: [],
-    },
-    {
-      id: 'gid://shopify/MenuItem/461633093688',
-      resourceId: 'gid://shopify/ShopPolicy/23358013496',
-      tags: [],
-      title: 'Refund Policy',
-      type: 'SHOP_POLICY',
-      url: '/policies/refund-policy',
-      items: [],
-    },
-    {
-      id: 'gid://shopify/MenuItem/461633126456',
-      resourceId: 'gid://shopify/ShopPolicy/23358111800',
-      tags: [],
-      title: 'Shipping Policy',
-      type: 'SHOP_POLICY',
-      url: '/policies/shipping-policy',
-      items: [],
-    },
-    {
-      id: 'gid://shopify/MenuItem/461633159224',
-      resourceId: 'gid://shopify/ShopPolicy/23358079032',
-      tags: [],
-      title: 'Terms of Service',
-      type: 'SHOP_POLICY',
-      url: '/policies/terms-of-service',
-      items: [],
-    },
-  ],
-};
-
-/**
- * @param {{
- *   isActive: boolean;
- *   isPending: boolean;
- * }}
- */
-function activeLinkStyle({isActive, isPending}) {
-  return {
-    fontWeight: isActive ? 'bold' : undefined,
-    color: isPending ? 'grey' : 'white',
-  };
-}
-
-/**
- * @typedef {Object} FooterProps
- * @property {Promise<FooterQuery|null>} footer
- * @property {HeaderQuery} header
- * @property {string} publicStoreDomain
- */
-
-/** @typedef {import('storefrontapi.generated').FooterQuery} FooterQuery */
-/** @typedef {import('storefrontapi.generated').HeaderQuery} HeaderQuery */
