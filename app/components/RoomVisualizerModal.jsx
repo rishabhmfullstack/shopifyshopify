@@ -92,5 +92,3 @@ export function RoomVisualizerModal({ product, isOpen, onClose }) {
     </div>
   );
 }
-  );
-}

@@ -143,4 +143,3 @@ export function CartDrawer({ isOpen, onClose, cartItems = [], onUpdateQuantity, 
     </div>
   );
 }
-}
